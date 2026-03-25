@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>SinoLingo | Изучение китайского языка и полезные инструменты</title>
+    <meta name="description" content="SinoLingo - платформа для интерактивного изучения китайского языка (HSK 1 - HSK 3), определения уровня HSK в текстах и приложение GoCountAI для подсчета очков в игре Го.">
+    <meta name="keywords" content="китайский язык, изучение китайского, HSK 1, HSK 2, HSK 3, анализатор HSK, игра Го, подсчет очков Го, GoCountAI, sinolingo">
+    <meta name="author" content="SinoLingo">
+    <link rel="canonical" href="https://sinolingo.com/">
+
+    <style>
+        /* ==========================================
+           Базовые стили и переменные каркаса
+           ========================================== */
+        :root {
+            --primary-color: #D32F2F; 
+            --secondary-color: #212121;
+            --background-light: #F9F9F9;
+            --text-color: #333333;
+            --card-bg: #FFFFFF;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Настройка для прилипающего подвала */
+        body {
+            color: var(--text-color);
+            line-height: 1.6;
+            background-color: var(--background-light);
+            scroll-behavior: smooth;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex-grow: 1; /* Выталкивает футер вниз */
+            padding-top: 80px; /* Отступ чтобы контент не заезжал под фиксированный header */
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Навигация (Шапка) */
+        header {
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 1px;
+        }
+
+        .nav-links a {
+            margin-left: 2rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Хлебные крошки */
+        .breadcrumbs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 0; /* Отступ сверху и по бокам */
+        }
+
+        .breadcrumbs {
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap; /* Для мобильных экранов */
+        }
+
+        .breadcrumbs a {
+            color: #666;
+            transition: var(--transition);
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--primary-color);
+        }
+
+        .breadcrumbs .separator {
+            margin: 0 0.5rem;
+            color: #ccc;
+        }
+
+        .breadcrumbs .current {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* Секция продуктов (Обертка) */
+        .products {
+            padding: 2rem 2rem 4rem; /* Уменьшен верхний отступ из-за хлебных крошек */
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Футер */
+        footer {
+            background-color: #1a1a1a;
+            color: #888;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность (Mobile) */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none; 
+            }
+            .breadcrumbs-container {
+                padding: 1rem 1.5rem 0;
+            }
+        }
+
+        /* ==========================================
+           Стили HSK Анализатора (Оригинальные)
+           ========================================== */
+        .hsk-analyzer-wrapper {
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            text-align: left; 
+        }
+        
+        .hsk-analyzer-wrapper h2 { 
+            color: #2c3e50; 
+            margin-top: 0; 
+            border-bottom: 2px solid #eee; 
+            padding-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        
+        #status { font-size: 0.9em; margin-bottom: 15px; color: #666; font-style: italic; }
+        
+        #inputText { 
+            width: 100%; 
+            height: 180px; 
+            padding: 15px; 
+            border: 2px solid #ddd; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            resize: vertical; 
+            box-sizing: border-box; 
+        }
+        
+        #analyzeBtn { 
+            background: #3498db; 
+            color: white; 
+            border: none; 
+            padding: 12px 25px; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            margin-top: 15px; 
+            transition: 0.3s;
+        }
+        #analyzeBtn:hover { background: #2980b9; }
+        #analyzeBtn:disabled { background: #ccc; cursor: not-allowed; }
+
+        #output { margin-top: 30px; }
+        
+        .sentence-block { margin-bottom: 20px; padding: 15px; border-radius: 8px; background: #fff; border: 1px solid #eee; transition: 0.3s; }
+        .hsk-pass { border-left: 5px solid #2ecc71; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.1); }
+        .hsk-hard { border-left: 5px solid #e74c3c; opacity: 0.7; background: #fafafa; }
+        
+        .sentence-text { font-size: 1.3em; margin-bottom: 10px; color: #2c3e50; display: block; }
+        
+        .word-box { display: inline-flex; flex-direction: column; align-items: center; margin: 2px; padding: 4px 8px; border-radius: 4px; border: 1px solid transparent; }
+        .is-hsk { background: #e8f5e9; border-color: #c8e6c9; }
+        .not-hsk { background: #ffebee; border-color: #ffcdd2; border-style: dashed; }
+        
+        .word-hanzi { font-size: 1.1em; font-weight: bold; }
+        .word-lvl { font-size: 0.7em; color: #7f8c8d; text-transform: uppercase; }
+        .unknown-label { color: #c62828; font-weight: bold; }
+
+        .metrics { font-size: 0.85em; color: #7f8c8d; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #ddd; }
+        .summary-card { background: #34495e; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+
+        @media (max-width: 600px) {
+            .hsk-analyzer-wrapper {
+                padding: 20px;
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo">SinoLingo</a>
+            <nav class="nav-links">
+                <a href="#products">Продукты</a>
+                <a href="#contacts">Контакты</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="breadcrumbs-container">
+            <nav class="breadcrumbs" aria-label="Breadcrumb">
+                <a href="/">Домой</a>
+                <span class="separator">/</span>
+                <a href="/about">О приложении</a>
+                <span class="separator">/</span>
+                <span class="current" aria-current="page">HSK Анализатор</span>
+            </nav>
+        </div>
+
+        <section id="products" class="products">
+            
+            <div class="hsk-analyzer-wrapper">
+                <h2>HSK Анализатор</h2>
+                <div id="status">Загрузка словарей...</div>
+                
+                <textarea id="inputText" placeholder="Вставьте текст на китайском..."></textarea>
+                <button id="analyzeBtn" disabled>Анализировать</button>
+            
+                <div id="output"></div>
+            </div>
+
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 SinoLingo.com.</p>
+    </footer>
+
+    <script>
+        const wordLevelMap = new Map();
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+        const btn = document.getElementById('analyzeBtn');
+        const textArea = document.getElementById('inputText');
+
+        const sentenceSegmenter = new Intl.Segmenter('zh', { granularity: 'sentence' });
+
+        async function loadHSK() {
+            const levels = [
+                { lvl: 1, url: "https://notrobot1.github.io/chinese/words/hsk1/words3.json" },
+                { lvl: 2, url: "https://notrobot1.github.io/chinese/words/hsk2/words3.json" },
+                { lvl: 3, url: "https://notrobot1.github.io/chinese/words/hsk3/words3.json" },
+                { lvl: 4, url: "https://notrobot1.github.io/chinese/words/hsk4/words3.json" },
+                { lvl: 5, url: "https://notrobot1.github.io/chinese/words/hsk5/words3.json" },
+                { lvl: 6, url: "https://notrobot1.github.io/chinese/words/hsk6/words3.json" },
+                { lvl: 7, url: "https://notrobot1.github.io/chinese/words/hsk7/words3.json" }
+            ];
+
+            try {
+                for (const item of levels) {
+                    const response = await fetch(item.url);
+                    const words = await response.json();
+                    words.forEach(w => wordLevelMap.set(w.hanzi, item.lvl));
+                }
+                status.textContent = `✅ Словари загружены (${wordLevelMap.size} слов).`;
+                btn.disabled = false;
+            } catch (e) {
+                status.textContent = "❌ Ошибка загрузки словарей.";
+            }
+        }
+
+        const isChinese = (str) => /[\u4E00-\u9FFF]/.test(str);
+
+        function dictionaryTokenize(text) {
+            let tokens = [];
+            let i = 0;
+            while (i < text.length) {
+                let found = false;
+                for (let len = 4; len >= 1; len--) {
+                    let chunk = text.substring(i, i + len);
+                    if (wordLevelMap.has(chunk)) {
+                        tokens.push({ text: chunk, level: wordLevelMap.get(chunk) });
+                        i += len;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    tokens.push({ text: text[i], level: null });
+                    i++;
+                }
+            }
+            return tokens;
+        }
+
+        function analyze() {
+            const text = textArea.value.trim();
+            if (!text) return;
+
+            output.innerHTML = "";
+            const rawSentences = Array.from(sentenceSegmenter.segment(text)).map(s => s.segment.trim());
+            
+            let stats = { total: 0, easy: 0 };
+            let htmlBuffer = "";
+
+            rawSentences.forEach(s => {
+                if (s.length <= 1) return;
+                stats.total++;
+
+                const cleanText = s.replace(/[^\u4E00-\u9FFF]/g, '');
+                const tokens = dictionaryTokenize(cleanText);
+
+                let hskCount = 0;
+                let maxLevel = 0;
+                let wordsHtml = "";
+
+                tokens.forEach(t => {
+                    if (t.level) {
+                        hskCount++;
+                        if (t.level > maxLevel) maxLevel = t.level;
+                        wordsHtml += `
+                            <div class="word-box is-hsk">
+                                <span class="word-hanzi">${t.text}</span>
+                                <span class="word-lvl">HSK ${t.level}</span>
+                            </div>`;
+                    } else if (isChinese(t.text)) {
+                        wordsHtml += `
+                            <div class="word-box not-hsk">
+                                <span class="word-hanzi">${t.text}</span>
+                                <span class="word-lvl unknown-label">NEW</span>
+                            </div>`;
+                    }
+                });
+
+                const ratio = hskCount / tokens.length;
+                const isEasy = ratio >= 0.6;
+                if (isEasy) stats.easy++;
+
+                htmlBuffer += `
+                    <div class="sentence-block ${isEasy ? 'hsk-pass' : 'hsk-hard'}">
+                        <div class="sentence-text">${s}</div>
+                        <div style="display: flex; flex-wrap: wrap;">${wordsHtml}</div>
+                        <div class="metrics">
+                            Знакомых слов: <b>${(ratio * 100).toFixed(0)}%</b> | 
+                            Уровень сложности: <b>${maxLevel > 0 ? 'HSK ' + maxLevel : 'Выше HSK7'}</b>
+                            ${!isEasy ? ' <span style="color:#e74c3c;">(Слишком много новых слов)</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            const summary = `
+                <div class="summary-card">
+                    <strong>Статистика текста:</strong><br>
+                    Предложений всего: ${stats.total} | 
+                    Соответствуют HSK 1-7: ${stats.easy}
+                </div>
+            `;
+            output.innerHTML = summary + htmlBuffer;
+        }
+
+        btn.addEventListener('click', analyze);
+        loadHSK();
+    </script>
+
+</body>
+</html>
