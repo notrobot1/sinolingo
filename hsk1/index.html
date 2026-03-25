@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Определитель HSK текста | SinoLingo</title>
+    <meta name="description" content="Определитель HSK текста - мощный анализатор для изучения китайского языка от SinoLingo.">
+    
+    <style>
+        /* Базовые стили и переменные (из оригинального дизайна) */
+        :root {
+            --primary-color: #D32F2F;
+            --secondary-color: #212121;
+            --background-light: #F9F9F9;
+            --text-color: #333333;
+            --card-bg: #FFFFFF;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            color: var(--text-color);
+            line-height: 1.6;
+            background-color: var(--background-light);
+            scroll-behavior: smooth;
+            padding-top: 80px; /* Отступ для фиксированной шапки */
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Навигация (из оригинального дизайна) */
+        header {
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 1px;
+        }
+
+        .nav-links a {
+            margin-left: 2rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Кнопки */
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-large {
+            padding: 1rem 3rem;
+            font-size: 1.1rem;
+            border-radius: 30px; /* Более округлая кнопка в стиле Google Play */
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+        }
+
+        /* --- СТИЛИ СТРАНИЦЫ ПРИЛОЖЕНИЯ --- */
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Верхний блок: Иконка + Название */
+        .app-header-block {
+            display: flex;
+            align-items: flex-start;
+            gap: 2.5rem;
+            margin-bottom: 3rem;
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .app-icon-large {
+            width: 160px;
+            height: 160px;
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+            border-radius: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .app-title-block {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .app-title-block h1 {
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .app-developer {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .app-meta {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .app-meta span {
+            background-color: #f0f0f0;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        /* Блок с описанием */
+        .app-description-block {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin-bottom: 3rem;
+        }
+
+        .app-description-block h2 {
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .app-description-block p {
+            color: #555;
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .app-features-list {
+            margin-top: 1.5rem;
+            padding-left: 1.5rem;
+            color: #555;
+        }
+
+        .app-features-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Футер (из оригинального дизайна) */
+        footer {
+            background-color: #1a1a1a;
+            color: #888;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+
+         /* Хлебные крошки */
+        .breadcrumbs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 0; /* Отступ сверху и по бокам */
+        }
+
+        .breadcrumbs {
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap; /* Для мобильных экранов */
+        }
+
+        .breadcrumbs a {
+            color: #666;
+            transition: var(--transition);
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--primary-color);
+        }
+
+        .breadcrumbs .separator {
+            margin: 0 0.5rem;
+            color: #ccc;
+        }
+
+        .breadcrumbs .current {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* Адаптивность (Mobile) */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .app-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .app-header-block {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 2rem 1.5rem;
+                gap: 1.5rem;
+            }
+
+            .app-icon-large {
+                width: 120px;
+                height: 120px;
+                font-size: 4rem;
+            }
+
+            .app-title-block h1 {
+                font-size: 1.8rem;
+            }
+
+            .app-meta {
+                justify-content: center;
+            }
+
+            .btn-large {
+                width: 100%;
+            }
+
+            .app-description-block {
+                padding: 1.5rem;
+            }
+
+            .breadcrumbs-container {
+                padding: 1rem 1.5rem 0;
+            }
+
+            
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo">SinoLingo</a>
+            <nav class="nav-links">
+                <a href="index.html#products">Продукты</a>
+                <a href="index.html#contacts">Контакты</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+
+
+        <div class="breadcrumbs-container">
+            <nav class="breadcrumbs" aria-label="Breadcrumb">
+                <a href="/">Домой</a>
+                <span class="separator">/</span>
+                <span class="current" aria-current="page">О приложении</span>
+            </nav>
+        </div>
+
+        <div class="app-container">
+            
+            <div class="app-header-block">
+                <div class="app-icon-large">🇨🇳</div>
+                <div class="app-title-block">
+                    <h1>HSK1 Матчинг</h1>
+                    <p class="app-developer">SinoLingo</p>
+                    <div class="app-meta">
+                        <span>Образование</span>
+                        <span>Инструменты</span>
+                    </div>
+                    <a href="/hsk1/main/" class="btn btn-large">Начать</a>
+                </div>
+            </div>
+
+            <div class="app-description-block">
+                <h2>Об этом инструменте</h2>
+                <p>Это приложение создано для того, чтобы ты мог быстро и эффективно запоминать слова из уровней HSK1. Вместо скучного зазубривания мы предлагаем игровую механику соединения пар, которая задействует визуальную память и ассоциативное мышление.</p>
+                <p>🎮 Что нужно делать?</p>
+
+                <p>Все максимально просто:</p>
+                <ul class="app-features-list">
+
+                </ul>
+                    <li><strong>Найди пару:</strong> Перед тобой два столбца — русский перевод и китайские иероглифы.</li>
+                
+                    <li><strong>Соедини их:</strong> Нажми на слово на русском, а затем на соответствующий ему иероглиф.</li>
+                
+                    <li><strong>Слушай и запоминай:</strong> При верном совпадении ты услышишь правильное произношение слова.</li>
+                
+                    <li><strong>Проходи раунды:</strong> В каждом раунде по 5 слов. Твоя задача — пройти весь список, совершив как можно меньше ошибок.</li>
+                
+                    <p>🧠 Как работает «умная» прогрессия?</p>
+                    <p>Игра не просто показывает случайные слова. У неё есть "память". Каждый раз, когда ты заходишь в игру, она берет слова, которые ты уже выучил, перемешивает их и подмешивает к новым. Это гарантирует, что старые слова не выветрятся из головы.</p>
+                    
+                </ul>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 SinoLingo.com</p>
+    </footer>
+
+</body>
+</html>
