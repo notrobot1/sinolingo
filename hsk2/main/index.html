@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SinoLingo | HSK2 Матчинг</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --primary-color: #D32F2F; 
+            --background-light: #F9F9F9;
+            --card-bg: #FFFFFF;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body {
+            color: #333;
+            background-color: var(--background-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main { flex-grow: 1; padding-top: 80px; }
+
+        header {
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed; width: 100%; top: 0; z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px; margin: 0 auto; padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); text-decoration: none; }
+
+        .breadcrumbs-container { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem 0; }
+        .breadcrumbs { font-size: 0.9rem; color: #666; }
+
+        .products { padding: 2rem 2rem 4rem; max-width: 1200px; margin: 0 auto; }
+
+        /* Десктопная карточка */
+        #game {
+            background: white; padding: 30px; border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%; max-width: 800px; margin: 0 auto;
+        }
+
+        .selected { border: 2px solid #3b82f6 !important; background-color: #bfdbfe !important; }
+        
+        button { 
+            touch-action: manipulation; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; word-break: break-word;
+        }
+
+        /* Мобильная адаптация: на весь экран */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            body { background-color: #fff; }
+            .products { padding: 1rem 0 2rem; }
+            #game { padding: 1.25rem 1rem; border-radius: 0; box-shadow: none; }
+            .breadcrumbs-container { padding: 1rem 1rem 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo">SinoLingo</a>
+            <nav class="nav-links">
+                <a href="/products" class="hover:text-red-600 transition">Продукты</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="breadcrumbs-container">
+            <nav class="breadcrumbs">
+                <a href="/" class="hover:text-red-600">Домой</a>
+                <span class="mx-2 text-gray-300">/</span>
+                <a href="/hsk2/" class="hover:text-red-600">О приложении</a>
+                <span class="mx-2 text-gray-300">/</span>
+                <span class="font-semibold text-gray-800">HSK2 Матчинг</span>
+            </nav>
+        </div>
+
+        <section class="products">
+            <div id="game">
+                <h1 class="text-2xl font-bold mb-4 text-center text-gray-800 text-balance">HSK2: Соедини перевод и иероглиф</h1>
+
+                <div class="mb-4 text-center">
+                    <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer">
+                        <input type="checkbox" id="toggle-pinyin" class="accent-blue-500" checked>
+                        Показывать пиньинь
+                    </label>
+                </div>
+
+                <div class="w-full mb-6 px-1">
+                    <div class="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="progress-current" class="absolute left-0 top-0 h-3 bg-blue-500 transition-all duration-500" style="width:0%"></div>
+                        <div id="progress-record" class="absolute top-0 h-3 w-1 bg-red-500 z-10" style="left:0%"></div>
+                    </div>
+                </div>
+
+                <div id="game-board" class="grid grid-cols-2 gap-3 items-stretch"></div>
+
+                <div id="result" class="mt-10 text-center text-xl font-semibold hidden text-blue-600"></div>
+                <div id="controls" class="mt-8 text-center hidden">
+                    <button id="restart" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold">Начать заново</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const WORDS_STORAGE_KEY = "hsk2_shuffled_list";
+        const RECORD_KEY = "hsk2_progress_index";
+        
+        let totalWords = 0, roundErrors = 0;
+        let masterWordsList = [], remainingWords = [], currentWords = [];
+        let selectedRu = null, audioMap = new Map();
+
+        const btnBase = "w-full min-h-[64px] p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 shadow-sm text-sm md:text-base font-medium";
+
+        /* ================== БАЛЛЫ ================== */
+        const SCORE_KEY = "wordScores";
+
+        function loadScores() {
+            return JSON.parse(localStorage.getItem(SCORE_KEY) || "{}");
+        }
+
+        function saveScores(scores) {
+            localStorage.setItem(SCORE_KEY, JSON.stringify(scores));
+        }
+
+        let wordScores = loadScores();
+
+        function addScore(word, delta) {
+            if (!wordScores[word.hanzi]) {
+                wordScores[word.hanzi] = 0;
+            }
+            wordScores[word.hanzi] += delta;
+            saveScores(wordScores);
+        }
+        /* =========================================== */
+
+        function shuffle(arr) {
+            let a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function updateUIProgress() {
+            const currentIdx = parseInt(localStorage.getItem(RECORD_KEY) || "0");
+            const percent = totalWords > 0 ? (currentIdx / totalWords) * 100 : 0;
+            document.getElementById("progress-current").style.width = percent + "%";
+            document.getElementById("progress-record").style.left = percent + "%";
+        }
+
+        function renderRound() {
+            const board = document.getElementById("game-board");
+            board.innerHTML = "";
+            audioMap.clear();
+
+            const showPinyin = document.getElementById("toggle-pinyin").checked;
+            
+            const roundRus = shuffle(currentWords);
+            const roundHanzi = shuffle(currentWords);
+
+            for (let i = 0; i < currentWords.length; i++) {
+                // Левая кнопка (Русский)
+                const rW = roundRus[i];
+                const rBtn = document.createElement("button");
+                rBtn.textContent = rW.ru;
+                rBtn.className = btnBase;
+                rBtn.onclick = () => {
+                    if (selectedRu) selectedRu.btn.classList.remove("selected");
+                    selectedRu = { word: rW, btn: rBtn };
+                    rBtn.classList.add("selected");
+                };
+
+                // Правая кнопка (Китайский)
+                const hW = roundHanzi[i];
+                const hBtn = document.createElement("button");
+                hBtn.className = btnBase;
+                hBtn.dataset.hanzi = hW.hanzi;
+                hBtn.dataset.pinyin = hW.pinyin;
+                hBtn.textContent = showPinyin ? `${hW.hanzi} (${hW.pinyin})` : hW.hanzi;
+                
+                if (hW.audio) {
+                    const a = new Audio(hW.audio);
+                    a.load();
+                    audioMap.set(hW.hanzi, a);
+                }
+
+                hBtn.onclick = () => {
+                    if (!selectedRu) return;
+
+                    const remainingCount = currentWords.length;
+
+                    if (selectedRu.word.hanzi === hW.hanzi) {
+                        // ✅ Правильно: Начисляем баллы
+                        const points = Math.max(0, (remainingCount - 1) * 2);
+                        addScore(hW, points);
+
+                        const audio = audioMap.get(hW.hanzi);
+                        if (audio) audio.play();
+
+                        selectedRu.btn.disabled = hBtn.disabled = true;
+                        selectedRu.btn.classList.replace("selected", "opacity-30");
+                        hBtn.classList.add("opacity-30", "cursor-not-allowed");
+
+                        currentWords = currentWords.filter(w => w.hanzi !== hW.hanzi);
+                        
+                        if (currentWords.length === 0) {
+                            if (roundErrors >= 3) {
+                                showEndState("Слишком много ошибок! Попробуем еще раз?");
+                            } else {
+                                let currentProgress = parseInt(localStorage.getItem(RECORD_KEY) || "0");
+                                currentProgress += 5;
+                                localStorage.setItem(RECORD_KEY, currentProgress);
+                                
+                                updateUIProgress();
+                                remainingWords.length === 0 ? showEndState("🎉 Поздравляем! Весь список пройден.") : setTimeout(loadNextRound, 400);
+                            }
+                        }
+                    } else {
+                        // ❌ Ошибка: Штраф
+                        addScore(selectedRu.word, -10);
+                        addScore(hW, -10);
+                        roundErrors++;
+
+                        selectedRu.btn.classList.remove("selected");
+                        hBtn.classList.add("bg-red-100", "border-red-300");
+                        setTimeout(() => hBtn.classList.remove("bg-red-100", "border-red-300"), 400);
+                    }
+                    selectedRu = null;
+                };
+
+                board.appendChild(rBtn);
+                board.appendChild(hBtn);
+            }
+        }
+
+        function loadNextRound() {
+            currentWords = remainingWords.splice(0, 5);
+            roundErrors = 0;
+            renderRound();
+        }
+
+        function showEndState(msg) {
+            document.getElementById("game-board").classList.add("hidden");
+            document.getElementById("result").classList.remove("hidden");
+            document.getElementById("controls").classList.remove("hidden");
+            document.getElementById("result").textContent = msg;
+        }
+
+        function initGameLogic(data) {
+            masterWordsList = data;
+            totalWords = data.length;
+
+            let savedShuffled = localStorage.getItem(WORDS_STORAGE_KEY);
+            let currentProgress = parseInt(localStorage.getItem(RECORD_KEY) || "0");
+
+            let workingList = [];
+
+            if (!savedShuffled) {
+                workingList = shuffle(masterWordsList);
+                localStorage.setItem(WORDS_STORAGE_KEY, JSON.stringify(workingList));
+                localStorage.setItem(RECORD_KEY, "0");
+                currentProgress = 0;
+            } else {
+                workingList = JSON.parse(savedShuffled);
+            }
+
+            let passedPart = workingList.slice(0, currentProgress);
+            let remainingPart = workingList.slice(currentProgress);
+            
+            remainingWords = [...shuffle(passedPart), ...remainingPart];
+
+            updateUIProgress();
+            document.getElementById("game-board").classList.remove("hidden");
+            document.getElementById("result").classList.add("hidden");
+            document.getElementById("controls").classList.add("hidden");
+            loadNextRound();
+        }
+
+        document.getElementById("toggle-pinyin").onchange = (e) => {
+            localStorage.setItem("showPinyin", e.target.checked);
+            const show = e.target.checked;
+            document.querySelectorAll("#game-board button[data-hanzi]").forEach(btn => {
+                btn.textContent = show ? `${btn.dataset.hanzi} (${btn.dataset.pinyin})` : btn.dataset.hanzi;
+            });
+        };
+
+        document.getElementById("restart").onclick = () => {
+            localStorage.removeItem(WORDS_STORAGE_KEY);
+            localStorage.removeItem(RECORD_KEY);
+            location.reload();
+        };
+
+        fetch("https://notrobot1.github.io/chinese/words/hsk2/words3.json")
+            .then(r => r.json())
+            .then(data => initGameLogic(data))
+            .catch(() => { document.getElementById("game").innerHTML = "Ошибка загрузки данных."; });
+    </script>
+</body>
+</html>
